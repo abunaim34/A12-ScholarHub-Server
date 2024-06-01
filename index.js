@@ -53,6 +53,30 @@ async function run() {
 
     const userCollection = client.db('scholarHubDB').collection('users')
 
+    // middleware
+    const verifyToken = (req, res, next) => {
+      console.log('inside', req.headers.authorization);
+      if (!req.headers.authorization) {
+        return res.status(401).send({ message: 'unauthorize access' })
+      }
+      const token = req.headers.authorization.split(' ')[1]
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRETE, (err, decoded) => {
+        if (err) {
+          return res.status(401).send({ message: 'unauthorize access' })
+        }
+        req.decoded = decoded;
+        next()
+      })
+    }
+
+
+    // jwt related api
+    app.post('/jwt', async(req, res) => {
+      const user = req.body
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRETE, { expiresIn: '1h'})
+      res.send({token})
+    })
+
     // post users by the signUp
     app.post('/users', async (req, res) => {
       const user = req.body;
@@ -67,7 +91,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get('/tutors', async(req, res) => {
+    app.get('/tutors', async (req, res) => {
       const result = await userCollection.find().toArray()
       res.send(result)
     })
