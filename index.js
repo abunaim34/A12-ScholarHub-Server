@@ -34,6 +34,7 @@ async function run() {
 
     const userCollection = client.db('scholarHubDB').collection('users')
     const reviewCollection = client.db('scholarHubDB').collection('reviews')
+    const noteCollection = client.db('scholarHubDB').collection('notes')
 
     // middleware
     const verifyToken = (req, res, next) => {
@@ -52,15 +53,15 @@ async function run() {
 
 
     // jwt related api
-    app.post('/jwt', async(req, res) => {
+    app.post('/jwt', async (req, res) => {
       const user = req.body
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRETE, { expiresIn: '1h'})
-      res.send({token})
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRETE, { expiresIn: '1h' })
+      res.send({ token })
     })
 
     // user related api
     app.post('/users', async (req, res) => {
-      const user = req.body; 
+      const user = req.body;
       const query = { email: user.email }
       const existingUser = await userCollection.findOne(query);
       if (existingUser) {
@@ -70,20 +71,35 @@ async function run() {
       res.send(result);
     });
 
+
+    // tutors related api
     app.get('/tutors', async (req, res) => {
       const result = await userCollection.find().toArray()
       res.send(result)
     })
 
     // review related api
-    app.get('/reviews', verifyToken, async(req, res) => {
+    app.get('/reviews', verifyToken, async (req, res) => {
       const result = await reviewCollection.find().toArray()
       res.send(result)
     })
 
-    app.post('/review', async(req, res) => {
+    app.post('/review', async (req, res) => {
       const review = req.body
       const result = await reviewCollection.insertOne(review)
+      res.send(result)
+    })
+
+    // notes related api
+    app.get('/notes/:email', async(req, res) => {
+      const email = req.params.email
+      const result = await noteCollection.find({email: email}).toArray()
+      res.send(result)
+    })
+
+    app.post('/note', async(req, res) => {
+      const note = req.body
+      const result = await noteCollection.insertOne(note)
       res.send(result)
     })
 
