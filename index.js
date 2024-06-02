@@ -52,6 +52,7 @@ async function run() {
     // await client.connect();
 
     const userCollection = client.db('scholarHubDB').collection('users')
+    const reviewCollection = client.db('scholarHubDB').collection('reviews')
 
     // middleware
     const verifyToken = (req, res, next) => {
@@ -79,9 +80,7 @@ async function run() {
 
     // post users by the signUp
     app.post('/users', async (req, res) => {
-      const user = req.body;
-      // insert email if user doesnt exists: 
-      // you can do this many ways (1. email unique, 2. upsert 3. simple checking)
+      const user = req.body; 
       const query = { email: user.email }
       const existingUser = await userCollection.findOne(query);
       if (existingUser) {
@@ -91,8 +90,16 @@ async function run() {
       res.send(result);
     });
 
+    // get all tutors
     app.get('/tutors', async (req, res) => {
       const result = await userCollection.find().toArray()
+      res.send(result)
+    })
+
+    // post review
+    app.post('/review', verifyToken, async(req, res) => {
+      const review = req.body
+      const result = await reviewCollection.insertOne(review)
       res.send(result)
     })
 
