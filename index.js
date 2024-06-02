@@ -37,7 +37,6 @@ async function run() {
 
     // middleware
     const verifyToken = (req, res, next) => {
-      console.log('inside', req.headers.authorization);
       if (!req.headers.authorization) {
         return res.status(401).send({ message: 'unauthorize access' })
       }
@@ -59,7 +58,7 @@ async function run() {
       res.send({token})
     })
 
-    // post users by the signUp
+    // user related api
     app.post('/users', async (req, res) => {
       const user = req.body; 
       const query = { email: user.email }
@@ -71,7 +70,6 @@ async function run() {
       res.send(result);
     });
 
-    // get all tutors
     app.get('/tutors', async (req, res) => {
       const result = await userCollection.find().toArray()
       res.send(result)
