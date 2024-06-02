@@ -14,26 +14,7 @@ const corsOptions = {
   optionSuccessStatus: 200,
 }
 app.use(cors(corsOptions))
-
 app.use(express.json())
-
-// Verify Token Middleware
-// const verifyToken = async (req, res, next) => {
-//   const token = req.cookies?.token
-//   console.log(token)
-//   if (!token) {
-//     return res.status(401).send({ message: 'unauthorized access' })
-//   }
-//   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-//     if (err) {
-//       console.log(err)
-//       return res.status(401).send({ message: 'unauthorized access' })
-//     }
-//     req.user = decoded
-//     next()
-//   })
-// }
-
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.zyfftle.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -96,8 +77,13 @@ async function run() {
       res.send(result)
     })
 
-    // post review
-    app.post('/review', verifyToken, async(req, res) => {
+    // review related api
+    app.get('/reviews', verifyToken, async(req, res) => {
+      const result = await reviewCollection.find().toArray()
+      res.send(result)
+    })
+
+    app.post('/review', async(req, res) => {
       const review = req.body
       const result = await reviewCollection.insertOne(review)
       res.send(result)
