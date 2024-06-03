@@ -71,6 +71,33 @@ async function run() {
       res.send(result);
     });
 
+    app.get('/users/admin/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: 'forbidden access' })
+      }
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      let admin = false;
+      if (user) {
+        admin = user?.role === 'Admin';
+      }
+      res.send({ admin });
+    })
+
+    app.get('/user/student/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: 'forbidden access' })
+      }
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      let student = false;
+      if (user) {
+        student = user?.role === 'Student';
+      }
+      res.send({ student });
+    })
 
     // tutors related api
     app.get('/tutors', async (req, res) => {
@@ -84,22 +111,51 @@ async function run() {
       res.send(result)
     })
 
-    app.post('/review', async (req, res) => {
+    app.post('/review', verifyToken, async (req, res) => {
       const review = req.body
       const result = await reviewCollection.insertOne(review)
       res.send(result)
     })
 
     // notes related api
-    app.get('/notes/:email', async(req, res) => {
+    app.get('/notes/:email', verifyToken, async(req, res) => {
       const email = req.params.email
       const result = await noteCollection.find({email: email}).toArray()
       res.send(result)
     })
 
-    app.post('/note', async(req, res) => {
+    app.get('/note/:id', verifyToken, async(req, res) => {
+      const id = req.params.id
+      const query = {_id: new ObjectId(id)}
+      const result = await noteCollection.findOne(query)
+      res.send(result)
+    })
+
+    app.post('/note', verifyToken, async(req, res) => {
       const note = req.body
       const result = await noteCollection.insertOne(note)
+      res.send(result)
+    })
+
+    app.put('/note/:id', verifyToken, async(req, res) => {
+      const id = req.params.id
+      const filter = {_id: new ObjectId(id)}
+      const options = { upsert: true };
+      const Updatenote = req.body
+      const updatedDoc = {
+        $set: {
+          title: Updatenote.title,
+          description: Updatenote.description
+        }
+      }
+      const result = await noteCollection.updateOne(filter,updatedDoc, options)
+      res.send(result)
+    })
+
+    app.delete('/note/:id', verifyToken, async(req, res) => {
+      const id = req.params.id
+      const query = {_id: new ObjectId(id)}
+      const result = await noteCollection.deleteOne(query)
       res.send(result)
     })
 
