@@ -51,6 +51,16 @@ async function run() {
       })
     }
 
+    const verifyAdmin = async(req, res, next) => {
+      const email = req.decoded.email
+      const query = {email: email}
+      const user = await userCollection.findOne(query)
+      const isAdmin = user?.role === 'Admin'
+      if(!isAdmin){
+        return res.status(403).send({message: 'forbidden access'})
+      }
+      next()
+    }
 
     // jwt related api
     app.post('/jwt', async (req, res) => {
@@ -118,28 +128,28 @@ async function run() {
     })
 
     // notes related api
-    app.get('/notes/:email', verifyToken, async(req, res) => {
+    app.get('/notes/:email', verifyToken, async (req, res) => {
       const email = req.params.email
-      const result = await noteCollection.find({email: email}).toArray()
+      const result = await noteCollection.find({ email: email }).toArray()
       res.send(result)
     })
 
-    app.get('/note/:id', verifyToken, async(req, res) => {
+    app.get('/note/:id', verifyToken, async (req, res) => {
       const id = req.params.id
-      const query = {_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const result = await noteCollection.findOne(query)
       res.send(result)
     })
 
-    app.post('/note', verifyToken, async(req, res) => {
+    app.post('/note', verifyToken, async (req, res) => {
       const note = req.body
       const result = await noteCollection.insertOne(note)
       res.send(result)
     })
 
-    app.put('/note/:id', verifyToken, async(req, res) => {
+    app.put('/note/:id', verifyToken, async (req, res) => {
       const id = req.params.id
-      const filter = {_id: new ObjectId(id)}
+      const filter = { _id: new ObjectId(id) }
       const options = { upsert: true };
       const Updatenote = req.body
       const updatedDoc = {
@@ -148,14 +158,24 @@ async function run() {
           description: Updatenote.description
         }
       }
-      const result = await noteCollection.updateOne(filter,updatedDoc, options)
+      const result = await noteCollection.updateOne(filter, updatedDoc, options)
       res.send(result)
     })
 
-    app.delete('/note/:id', verifyToken, async(req, res) => {
+    app.delete('/note/:id', verifyToken, async (req, res) => {
       const id = req.params.id
-      const query = {_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const result = await noteCollection.deleteOne(query)
+      res.send(result)
+    })
+
+    app.get('/all-users', verifyToken, verifyAdmin, async (req, res) => {
+      const search = req.query.search
+      const query = {
+        name: { $regex: `${search}`, $options: 'i' }
+      }
+      const cursor = userCollection.find(query)
+      const result = await cursor.toArray()
       res.send(result)
     })
 
