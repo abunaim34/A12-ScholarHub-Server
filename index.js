@@ -35,6 +35,7 @@ async function run() {
     const userCollection = client.db('scholarHubDB').collection('users')
     const reviewCollection = client.db('scholarHubDB').collection('reviews')
     const noteCollection = client.db('scholarHubDB').collection('notes')
+    const sessionCollection = client.db('scholarHubDB').collection('sessions')
 
     // middleware
     const verifyToken = (req, res, next) => {
@@ -49,6 +50,17 @@ async function run() {
         req.decoded = decoded;
         next()
       })
+    }
+
+    const verifyTutor = async (req, res, next) => {
+      const email = req.decoded.email
+      const query = { email: email }
+      const user = await userCollection.findOne(query)
+      const isTutor = user?.role === 'Tutor'
+      if (!isTutor) {
+        return res.status(403).send({ message: 'forbidden access' })
+      }
+      next()
     }
 
     const verifyAdmin = async (req, res, next) => {
@@ -132,14 +144,14 @@ async function run() {
       res.send(result)
     })
 
-    app.get('/user/:id', async (req, res) => {
+    app.get('/user/:id', verifyToken, async (req, res) => {
       const id = req.params.id
       const query = { _id: new ObjectId(id) }
       const result = await userCollection.findOne(query)
       res.send(result)
     })
 
-    app.put('/user/:id', async (req, res) => {
+    app.put('/user/:id', verifyToken, verifyToken, async (req, res) => {
       const id = req.params.id
       const query = { _id: new ObjectId(id) }
       const options = { upsert: true };
@@ -211,6 +223,13 @@ async function run() {
       const id = req.params.id
       const query = { _id: new ObjectId(id) }
       const result = await noteCollection.deleteOne(query)
+      res.send(result)
+    })
+
+    // session related api
+    app.post('/session', async(req, res) => {
+      const session = req.body
+      const result = await sessionCollection.insertOne(session)
       res.send(result)
     })
 
