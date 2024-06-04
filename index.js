@@ -51,13 +51,13 @@ async function run() {
       })
     }
 
-    const verifyAdmin = async(req, res, next) => {
+    const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email
-      const query = {email: email}
+      const query = { email: email }
       const user = await userCollection.findOne(query)
       const isAdmin = user?.role === 'Admin'
-      if(!isAdmin){
-        return res.status(403).send({message: 'forbidden access'})
+      if (!isAdmin) {
+        return res.status(403).send({ message: 'forbidden access' })
       }
       next()
     }
@@ -107,6 +107,19 @@ async function run() {
         student = user?.role === 'Student';
       }
       res.send({ student });
+    })
+
+    app.get('/all-users', verifyToken, verifyAdmin, async (req, res) => {
+      const search = req.query.search
+      const query = {
+        name: { $regex: `${search}`, $options: 'i' }
+      }
+      const result = await userCollection.find(query).toArray()
+      res.send(result)
+    })
+
+    app.patch('/user/:id', async (req, res) => {
+      const id = req.params.id
     })
 
     // tutors related api
@@ -166,16 +179,6 @@ async function run() {
       const id = req.params.id
       const query = { _id: new ObjectId(id) }
       const result = await noteCollection.deleteOne(query)
-      res.send(result)
-    })
-
-    app.get('/all-users', verifyToken, verifyAdmin, async (req, res) => {
-      const search = req.query.search
-      const query = {
-        name: { $regex: `${search}`, $options: 'i' }
-      }
-      const cursor = userCollection.find(query)
-      const result = await cursor.toArray()
       res.send(result)
     })
 
