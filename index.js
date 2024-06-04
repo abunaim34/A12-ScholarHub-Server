@@ -81,20 +81,6 @@ async function run() {
       res.send(result);
     });
 
-    app.get('/users/admin/:email', verifyToken, async (req, res) => {
-      const email = req.params.email;
-      if (email !== req.decoded.email) {
-        return res.status(403).send({ message: 'forbidden access' })
-      }
-      const query = { email: email };
-      const user = await userCollection.findOne(query);
-      let admin = false;
-      if (user) {
-        admin = user?.role === 'Admin';
-      }
-      res.send({ admin });
-    })
-
     app.get('/user/student/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
       if (email !== req.decoded.email) {
@@ -109,6 +95,34 @@ async function run() {
       res.send({ student });
     })
 
+    app.get('/user/tutor/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: 'forbidden access' })
+      }
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      let tutor = false;
+      if (user) {
+        tutor = user?.role === 'Tutor';
+      }
+      res.send({ tutor });
+    })
+
+    app.get('/users/admin/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: 'forbidden access' })
+      }
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      let admin = false;
+      if (user) {
+        admin = user?.role === 'Admin';
+      }
+      res.send({ admin });
+    })
+
     app.get('/all-users', verifyToken, verifyAdmin, async (req, res) => {
       const search = req.query.search
       const query = {
@@ -118,8 +132,25 @@ async function run() {
       res.send(result)
     })
 
-    app.patch('/user/:id', async (req, res) => {
+    app.get('/user/:id', async (req, res) => {
       const id = req.params.id
+      const query = { _id: new ObjectId(id) }
+      const result = await userCollection.findOne(query)
+      res.send(result)
+    })
+
+    app.put('/user/:id', async (req, res) => {
+      const id = req.params.id
+      const query = { _id: new ObjectId(id) }
+      const options = { upsert: true };
+      const updateUser = req.body
+      const updatedDoc = {
+        $set: {
+          role: updateUser.role
+        }
+      }
+      const result = await userCollection.updateOne(query, updatedDoc, options)
+      res.send(result)
     })
 
     // tutors related api
@@ -165,6 +196,7 @@ async function run() {
       const filter = { _id: new ObjectId(id) }
       const options = { upsert: true };
       const Updatenote = req.body
+      console.log('note', Updatenote);
       const updatedDoc = {
         $set: {
           title: Updatenote.title,
