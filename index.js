@@ -227,6 +227,17 @@ async function run() {
     })
 
     // session related api
+    app.get('/allSessions', async(req, res) => {
+      const result = await sessionCollection.find().toArray()
+      res.send(result)
+    })
+
+    app.get('/sessions/:tutor_email', verifyToken, verifyTutor, async (req, res) => {
+      const tutor_email = req.params.tutor_email
+      const result = await sessionCollection.find({ tutor_email: tutor_email }).toArray()
+      res.send(result)
+    })
+
     app.post('/session', async(req, res) => {
       const session = req.body
       const result = await sessionCollection.insertOne(session)
