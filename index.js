@@ -208,7 +208,6 @@ async function run() {
       const filter = { _id: new ObjectId(id) }
       const options = { upsert: true };
       const Updatenote = req.body
-      console.log('note', Updatenote);
       const updatedDoc = {
         $set: {
           title: Updatenote.title,
@@ -238,25 +237,33 @@ async function run() {
       res.send(result)
     })
 
-    app.post('/session', async(req, res) => {
+    app.post('/session', verifyToken, verifyTutor, async(req, res) => {
       const session = req.body
       const result = await sessionCollection.insertOne(session)
       res.send(result)
     })
 
-    app.put('/session/:id', async(req, res) => {
+    app.put('/session/:id', verifyToken, verifyAdmin, async(req, res) => {
       const id = req.params.id
       const filter = {_id: new ObjectId(id)}
       const updatestatus = req.body
+      const options = { upsert: true };
       const updatedDoc = {
         $set: {
           status: updatestatus.status,
           registration_fee: updatestatus.registration_fee
         }
       }
-      const result = await sessionCollection.updateOne(filter, updatedDoc)
+      const result = await sessionCollection.updateOne(filter, updatedDoc, options)
       res.send(result)
     })
+
+    // app.delete('/session/:id', async(req, res) => {
+    //   const id = req.params.id
+    //   const query = {_id: new ObjectId(id)}
+    //   const result = await sessionCollection.deleteOne(query)
+    //   res.send(result)
+    // })
 
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
