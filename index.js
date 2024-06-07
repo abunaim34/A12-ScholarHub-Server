@@ -226,7 +226,7 @@ async function run() {
     })
 
     // session related api
-    app.get('/allSessions', async(req, res) => {
+    app.get('/allSessions', async (req, res) => {
       const result = await sessionCollection.find().toArray()
       res.send(result)
     })
@@ -237,21 +237,23 @@ async function run() {
       res.send(result)
     })
 
-    app.post('/session', verifyToken, verifyTutor, async(req, res) => {
+    app.post('/session', verifyToken, async (req, res) => {
       const session = req.body
       const result = await sessionCollection.insertOne(session)
       res.send(result)
     })
 
-    app.put('/session/:id', verifyToken, verifyAdmin, async(req, res) => {
+    app.put('/session/:id', verifyToken,  async (req, res) => {
       const id = req.params.id
-      const filter = {_id: new ObjectId(id)}
+      const filter = { _id: new ObjectId(id) }
       const updatestatus = req.body
       const options = { upsert: true };
       const updatedDoc = {
         $set: {
           status: updatestatus.status,
-          registration_fee: updatestatus.registration_fee
+          registration_fee: updatestatus.registration_fee,
+          reason: updatestatus.reason,
+          feedback: updatestatus.feedback
         }
       }
       const result = await sessionCollection.updateOne(filter, updatedDoc, options)
