@@ -260,6 +260,36 @@ async function run() {
       res.send(result)
     })
 
+    app.put('/update-session/:id', verifyToken, verifyAdmin, async(req, res) => {
+      const id = req.params.id
+      const query = {_id: new ObjectId(id)}
+      const sessionsData = req.body
+      const options = { upsert: true };
+      const updatedDoc = {
+        $set: {
+          session_title: sessionsData.session_title,
+          description: sessionsData.description,
+          registration_start_date: sessionsData.registration_start_date,
+          registration_end_date: sessionsData.registration_end_date,
+          class_start_time: sessionsData.class_start_time,
+          class_end_time: sessionsData.class_end_time,
+          session_duration: sessionsData.session_duration,
+          registration_fee: sessionsData.registration_fee,
+          category: sessionsData.category,
+          status: sessionsData.status,
+        }
+      }
+      const result = await sessionCollection.updateOne(query, updatedDoc, options)
+      res.send(result)
+    })
+
+    app.delete('/session/:id', async(req, res) => {
+      const id = req.params.id
+      const query = {_id: new ObjectId(id)}
+      const result = await sessionCollection.deleteOne(query)
+      res.send(result)
+    })
+
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
