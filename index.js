@@ -172,7 +172,7 @@ async function run() {
     })
 
     // review related api
-    app.get('/reviews', verifyToken, async (req, res) => {
+    app.get('/reviews',  async (req, res) => {
       const result = await reviewCollection.find().toArray()
       res.send(result)
     })
@@ -259,13 +259,6 @@ async function run() {
       const result = await sessionCollection.updateOne(filter, updatedDoc, options)
       res.send(result)
     })
-
-    // app.delete('/session/:id', async(req, res) => {
-    //   const id = req.params.id
-    //   const query = {_id: new ObjectId(id)}
-    //   const result = await sessionCollection.deleteOne(query)
-    //   res.send(result)
-    // })
 
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
