@@ -9,7 +9,7 @@ const port = process.env.PORT || 5000
 
 // middleware
 const corsOptions = {
-  origin: ['http://localhost:5173', 'http://localhost:5174'],
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'https://scholarhub-98ad5.web.app', 'https://scholarhub-98ad5.firebaseapp.com'],
   credentials: true,
   optionSuccessStatus: 200,
 }
@@ -309,20 +309,15 @@ async function run() {
     // payment intent
     app.post('/create-payment-intent',  async (req, res) => {
       const registration_fee = req.body.registration_fee
-      console.log(registration_fee);
       const registration_feeInCent = parseFloat(registration_fee) * 100
       if (!registration_fee || registration_feeInCent < 1) return
-      // generate clientSecret
       const { client_secret } = await stripe.paymentIntents.create({
         amount: registration_feeInCent,
         currency: 'usd',
-        // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
         automatic_payment_methods: {
           enabled: true,
         },
       })
-      console.log('client', client_secret);
-      // send client secret as response
       res.send({ clientSecret: client_secret })
     })
 
