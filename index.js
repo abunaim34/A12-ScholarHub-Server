@@ -37,6 +37,7 @@ async function run() {
     const noteCollection = client.db('scholarHubDB').collection('notes')
     const sessionCollection = client.db('scholarHubDB').collection('sessions')
     const bookedSessionCollection = client.db('scholarHubDB').collection('bookedSessions')
+    const materialCollection = client.db('scholarHubDB').collection('materials')
 
     // middleware
     const verifyToken = (req, res, next) => {
@@ -173,7 +174,7 @@ async function run() {
     })
 
     // review related api
-    app.get('/reviews',  async (req, res) => {
+    app.get('/reviews', async (req, res) => {
       const result = await reviewCollection.find().toArray()
       res.send(result)
     })
@@ -244,7 +245,7 @@ async function run() {
       res.send(result)
     })
 
-    app.put('/session/:id', verifyToken,  async (req, res) => {
+    app.put('/session/:id', verifyToken, async (req, res) => {
       const id = req.params.id
       const filter = { _id: new ObjectId(id) }
       const updatestatus = req.body
@@ -261,9 +262,9 @@ async function run() {
       res.send(result)
     })
 
-    app.put('/update-session/:id', verifyToken, verifyAdmin, async(req, res) => {
+    app.put('/update-session/:id', verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id
-      const query = {_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const sessionsData = req.body
       const options = { upsert: true };
       const updatedDoc = {
@@ -284,30 +285,49 @@ async function run() {
       res.send(result)
     })
 
-    app.delete('/session/:id', verifyToken, verifyAdmin, async(req, res) => {
+    app.delete('/session/:id', verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id
-      const query = {_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const result = await sessionCollection.deleteOne(query)
       res.send(result)
     })
 
     // booked related api
-    app.get('/booked-session/:email', async(req, res) => {
+    app.get('/booked-session/:email', async (req, res) => {
       const email = req.params.email
-      const query ={email: email}
+      const query = { email: email }
       const result = await bookedSessionCollection.find(query).toArray()
       res.send(result)
     })
 
-    app.post('/booked-sesssion', async(req, res) => {
+    app.post('/booked-sesssion', async (req, res) => {
       const bookedSessions = req.body
       const result = await bookedSessionCollection.insertOne(bookedSessions)
       res.send(result)
     })
 
+    // upload materials related api
+    app.get('/materials', async(req, res) => {
+      const result = await materialCollection.find().toArray()
+      res.send(result)
+    })
+
+    app.get('/materials/:tutor_email', async(req, res) => {
+      const tutor_email = req.params.tutor_email
+      const query = {tutor_email: tutor_email}
+      const result = await materialCollection.find(query).toArray()
+      res.send(result)
+    })
+ 
+    app.post('/upload-materials', verifyToken, verifyTutor, async (req, res) => {
+      const materials = req.body
+      const result = await materialCollection.insertOne(materials)
+      res.send(result)
+    })
+
 
     // payment intent
-    app.post('/create-payment-intent',  async (req, res) => {
+    app.post('/create-payment-intent', async (req, res) => {
       const registration_fee = req.body.registration_fee
       const registration_feeInCent = parseFloat(registration_fee) * 100
       if (!registration_fee || registration_feeInCent < 1) return
