@@ -4,7 +4,7 @@ require('dotenv').config()
 const cors = require('cors')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb')
 const jwt = require('jsonwebtoken')
-
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 const port = process.env.PORT || 5000
 
 // middleware
@@ -36,6 +36,7 @@ async function run() {
     const reviewCollection = client.db('scholarHubDB').collection('reviews')
     const noteCollection = client.db('scholarHubDB').collection('notes')
     const sessionCollection = client.db('scholarHubDB').collection('sessions')
+    const bookedSessionCollection = client.db('scholarHubDB').collection('bookedSessions')
 
     // middleware
     const verifyToken = (req, res, next) => {
@@ -283,11 +284,46 @@ async function run() {
       res.send(result)
     })
 
-    app.delete('/session/:id', async(req, res) => {
+    app.delete('/session/:id', verifyToken, verifyAdmin, async(req, res) => {
       const id = req.params.id
       const query = {_id: new ObjectId(id)}
       const result = await sessionCollection.deleteOne(query)
       res.send(result)
+    })
+
+    // booked related api
+    app.get('/booked-session/:email', async(req, res) => {
+      const email = req.params.email
+      const query ={email: email}
+      const result = await bookedSessionCollection.find(query).toArray()
+      res.send(result)
+    })
+
+    app.post('/booked-sesssion', async(req, res) => {
+      const bookedSessions = req.body
+      const result = await bookedSessionCollection.insertOne(bookedSessions)
+      res.send(result)
+    })
+
+
+    // payment intent
+    app.post('/create-payment-intent',  async (req, res) => {
+      const registration_fee = req.body.registration_fee
+      console.log(registration_fee);
+      const registration_feeInCent = parseFloat(registration_fee) * 100
+      if (!registration_fee || registration_feeInCent < 1) return
+      // generate clientSecret
+      const { client_secret } = await stripe.paymentIntents.create({
+        amount: registration_feeInCent,
+        currency: 'usd',
+        // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
+        automatic_payment_methods: {
+          enabled: true,
+        },
+      })
+      console.log('client', client_secret);
+      // send client secret as response
+      res.send({ clientSecret: client_secret })
     })
 
     // Send a ping to confirm a successful connection
