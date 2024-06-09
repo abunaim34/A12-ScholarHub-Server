@@ -229,13 +229,24 @@ async function run() {
 
     // session related api
     app.get('/allSessions', async (req, res) => {
+      const size = parseInt(req.query.size)
+      const page = parseInt(req.query.page)
+
       const result = await sessionCollection.find().toArray()
       res.send(result)
     })
 
+    app.get('/sessionsCount', async (req, res) => {
+      const count = await sessionCollection.countDocuments()
+      res.send({ count })
+    })
+
     app.get('/sessions/:tutor_email', verifyToken, verifyTutor, async (req, res) => {
+      const size = parseInt(req.query.size)
+      const page = parseInt(req.query.page) - 1
+
       const tutor_email = req.params.tutor_email
-      const result = await sessionCollection.find({ tutor_email: tutor_email }).toArray()
+      const result = await sessionCollection.find({ tutor_email: tutor_email }).skip(page * size).limit(size).toArray()
       res.send(result)
     })
 
