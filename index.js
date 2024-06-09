@@ -318,10 +318,40 @@ async function run() {
       const result = await materialCollection.find(query).toArray()
       res.send(result)
     })
+
+    app.get('/material/:id', async(req, res) => {
+      const id = req.params.id
+      const query = {_id: new ObjectId(id)}
+      const result = materialCollection.findOne(query)
+      res.send(result)
+    })
  
     app.post('/upload-materials', verifyToken, verifyTutor, async (req, res) => {
       const materials = req.body
       const result = await materialCollection.insertOne(materials)
+      res.send(result)
+    })
+
+    app.put('/materials/:id', async(req, res) => {
+      const id = req.params.id
+      const filter = {_id: new ObjectId(id)}
+      const materials = req.body
+      const options = {upsert: true}
+      const updatedDoc = {
+        $set: {
+          title: materials.title,
+          link: materials.link,
+          img: materials.img
+        }
+      }
+      const result = await materialCollection.updateOne(filter, updatedDoc, options)
+      res.send(result)
+    })
+
+    app.delete('delete-materials/:id', async(req, res) => {
+      const id = req.params.id
+      const query = {_id: new ObjectId(id)}
+      const result = await materialCollection.deleteOne(query)
       res.send(result)
     })
 
