@@ -229,9 +229,6 @@ async function run() {
 
     // session related api
     app.get('/allSessions', async (req, res) => {
-      const size = parseInt(req.query.size)
-      const page = parseInt(req.query.page)
-
       const result = await sessionCollection.find().toArray()
       res.send(result)
     })
@@ -319,8 +316,16 @@ async function run() {
 
     // upload materials related api
     app.get('/materials', async(req, res) => {
-      const result = await materialCollection.find().toArray()
+      const size = parseInt(req.query.size)
+      const page = parseInt(req.query.page) - 1
+
+      const result = await materialCollection.find().skip(page * size).limit(size).toArray()
       res.send(result)
+    })
+
+    app.get('/materialsCount', async (req, res) => {
+      const count = await materialCollection.countDocuments()
+      res.send({ count })
     })
 
     app.get('/materials/:tutor_email', async(req, res) => {
